@@ -1,14 +1,20 @@
 import React from 'react';
+import UserProfile from './components/UserProfile';
+import LoginForm from './components/LoginForm';
+import RegisterForm from './components/RegisterForm';
+import LogoutButton from './components/LogoutButton';
 
-function App() {
+const App = () => {
   return (
     <div className="App">
-      <header className="App-header">
-        <h1>Welcome to My Linktree Clone</h1>
-        <p>This is the beginning of my custom Linktree-like application.</p>
-      </header>
+      <h1>Welcome to the App</h1>
+      <UserProfile />
+      <LoginForm />
+      <RegisterForm />
+      <LogoutButton />
+      {/* Any other components you want to include can be added here */}
     </div>
   );
-}
+};
 
 export default App;
