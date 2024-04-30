@@ -1,10 +1,21 @@
-.App-header {
-  background-color: #282c34;
+:root {
+  --dynamic-background-color: #ffffff; /* Default fallback color */
+}
+
+html {
+  height: 100%;
+  /* No need for min-height since html will always take at least the full viewport height */
+}
+
+body {
+  margin: 0; /* Remove margin to make sure it occupies the full viewport height */
+  min-height: 100vh; /* Ensure body takes at least the full viewport height */
+  
+}
+
+#root, .App {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: black;
+  background-color: var(--dynamic-background-color); /* Apply the dynamic background color */
 }

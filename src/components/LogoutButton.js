@@ -1,21 +1,30 @@
 // src/components/LogoutButton.js
 import React from 'react';
-import { auth } from '../firebase-config';
-
+import { useDispatch } from 'react-redux';
+import { logout } from '../features/userSlice';
+import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 const LogoutButton = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const buttonColor = useSelector(state => state.settings.buttonColor);
+
+  // Define style based on the buttonColor from Redux
+  const style = {
+    backgroundColor: buttonColor, // Ensure this matches your state's actual property
+    color: 'white' // Set text color to white for visibility
+  };
+
   const handleLogout = () => {
-    auth.signOut()
-      .then(() => {
-        console.log('Logged out successfully!');
-      })
-      .catch((error) => {
-        console.error('Logout failed:', error);
-      });
+    dispatch(logout());
+    navigate('/login');
   };
 
   return (
-    <button onClick={handleLogout}>Logout</button>
+    <button style={style} onClick={handleLogout}>
+      Logout
+    </button>
   );
 };
 
