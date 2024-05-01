@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { addLink, fetchLinks, updateLink, deleteLink } from './links/links';
 import { useSelector } from 'react-redux';
-//import LogoutButton from './LogoutButton';  // Import the LogoutButton
 
-const LinksManager = ({ userId, styles = { backgroundColor: '#fff', buttonColor: '#000'} }) => {
+const LinksManager = ({ userId }) => {
   const [links, setLinks] = useState([]);
   const [newLink, setNewLink] = useState('');
   const [editLink, setEditLink] = useState({});
@@ -14,7 +13,6 @@ const LinksManager = ({ userId, styles = { backgroundColor: '#fff', buttonColor:
       const loadedLinks = await fetchLinks(userId);
       setLinks(loadedLinks);
     };
-
     loadLinks();
   }, [userId]);
 
@@ -22,7 +20,7 @@ const LinksManager = ({ userId, styles = { backgroundColor: '#fff', buttonColor:
     if (newLink) {
       const linkId = await addLink(userId, { url: newLink });
       setLinks([...links, { id: linkId, url: newLink }]);
-      setNewLink('');  // Clear the input after adding
+      setNewLink('');
     }
   };
 
@@ -36,12 +34,8 @@ const LinksManager = ({ userId, styles = { backgroundColor: '#fff', buttonColor:
       await updateLink(userId, editLink.id, { url: editLink.url });
       const updatedLinks = links.map(link => link.id === editLink.id ? { ...link, url: editLink.url } : link);
       setLinks(updatedLinks);
-      setEditLink({});  // Clear the editing state
+      setEditLink({});
     }
-  };
-
-  const startEdit = (link) => {
-    setEditLink(link);
   };
 
   return (

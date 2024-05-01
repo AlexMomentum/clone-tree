@@ -49,21 +49,19 @@ export const persistSettingsToFirestore = createAsyncThunk(
 const settingsSlice = createSlice({
   name: 'settings',
   initialState: {
-    backgroundColor: 'defaultColor', // Set this to your preferred default color
-    buttonColor: '#4A90E2',
+    backgroundColor: '#ffffff',  // default background color
+    buttonColor: '#0000ff',      // default button color
     userId: null,
     loading: false,
     error: null,
   },
   reducers: {
-    // These should only update the local state, without any async calls
     setBackgroundColor: (state, action) => {
       state.backgroundColor = action.payload;
     },
     setButtonColor: (state, action) => {
       state.buttonColor = action.payload;
     },
-    // Add setUserId if needed for tracking which user is logged in
     setUserId: (state, action) => {
       state.userId = action.payload;
     },
@@ -72,10 +70,8 @@ const settingsSlice = createSlice({
     builder
       .addCase(fetchUserSettings.pending, (state) => {
         state.loading = true;
-        state.error = null;
       })
       .addCase(fetchUserSettings.fulfilled, (state, action) => {
-        // Merge the previous logic here if there was another reducer for the same action
         state.backgroundColor = action.payload.backgroundColor || state.backgroundColor;
         state.buttonColor = action.payload.buttonColor || state.buttonColor;
         state.loading = false;
@@ -84,8 +80,6 @@ const settingsSlice = createSlice({
         state.error = action.payload || 'Failed to fetch settings';
         state.loading = false;
       });
-      // Ensure no other cases for 'settings/fetchUserSettings/fulfilled' are defined
-      // ... your other extraReducers
   }
 });
 

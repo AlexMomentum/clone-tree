@@ -1,36 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import UserProfile from './components/UserProfile';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
-import LogoutButton from './components/LogoutButton';
+import NavigationBar from './components/NavigationBar';
 import LinksManager from './components/LinksManager';
 import Settings from './components/Settings';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchUserSettings, setBackgroundColor, setButtonColor } from './features/settingsSlice'; // Import action creators
+import { fetchUserSettings, setBackgroundColor, setButtonColor } from './features/settingsSlice';
+import Appearance from './components/Appearance'
 
 const App = () => {
-  const user = useSelector(state => state.user.data);
-  const backgroundColor = useSelector(state => state.settings.backgroundColor);
-  const buttonColor = useSelector(state => state.settings.buttonColor);
-  const navigate = useNavigate();
+  const { user, settings } = useSelector(state => ({
+    user: state.user.data,
+    settings: state.settings
+  }));
   const dispatch = useDispatch();
-  
-  const [showSettings, setShowSettings] = useState(false);
+  const navigate = useNavigate();
 
+  // Fetch user settings
   useEffect(() => {
     if (user) {
       dispatch(fetchUserSettings(user.uid));
     }
-  }, [user, navigate, dispatch]);
-  
-  useEffect(() => {
-    document.documentElement.style.setProperty('--dynamic-background-color', backgroundColor);
-    document.documentElement.style.setProperty('--dynamic-button-color', buttonColor);
-}, [backgroundColor, buttonColor]);
-   // Include backgroundColor in the dependency array
+  }, [user, dispatch]);
 
-  // This function should correctly dispatch actions to update the Redux store for settings
+  // Update CSS variables whenever settings change
+  useEffect(() => {
+    document.documentElement.style.setProperty('--dynamic-background-color', settings.backgroundColor);
+    document.documentElement.style.setProperty('--dynamic-button-color', settings.buttonColor);
+  }, [settings.backgroundColor, settings.buttonColor]);
+
   const updateStyles = (newStyles) => {
     if (newStyles.backgroundColor) {
       dispatch(setBackgroundColor(newStyles.backgroundColor));
@@ -38,30 +38,23 @@ const App = () => {
     if (newStyles.buttonColor) {
       dispatch(setButtonColor(newStyles.buttonColor));
     }
-};
+  };
 
   const handleToggleSettings = () => {
-    setShowSettings(prev => !prev);
+    navigate('/settings'); // Navigate to the settings route
   };
-// style={{ backgroundColor }}
-  // Inside your App component
+
   return (
-    <div className="App min-h-screen flex flex-col" style={{ backgroundColor: backgroundColor }}> 
-      {user && (
-        <>
-          <LogoutButton style={{ backgroundColor: buttonColor, color: 'white' }} />
-          <button style={{ backgroundColor: buttonColor, color: 'white' }} onClick={handleToggleSettings}>
-            Settings
-          </button>
-          {showSettings && <Settings onUpdateStyles={updateStyles} />}
-        </>
-      )}
+    <div className="App min-h-screen flex flex-col">
+      {user && <NavigationBar onToggleSettings={handleToggleSettings} />}
       <Routes>
         <Route path="/" element={<Navigate replace to={user ? "/links" : "/login"} />} />
         <Route path="/login" element={<LoginForm />} />
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/register" element={<RegisterForm />} />
         <Route path="/links" element={user ? <LinksManager userId={user.id} /> : <Navigate replace to="/login" />} />
+        <Route path="/settings" element={<Settings onUpdateStyles={updateStyles} />} />
+        <Route path="/appearance" element={<Appearance />} />
       </Routes>
     </div>
   );

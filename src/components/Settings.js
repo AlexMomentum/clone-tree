@@ -1,12 +1,10 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { setBackgroundColor, setButtonColor, fetchUserSettings, persistSettingsToFirestore } from '../features/settingsSlice';
+import { fetchUserSettings } from '../features/settingsSlice';
 
 const Settings = () => {
   const user = useSelector(state => state.user.data);
   const dispatch = useDispatch();
-  const backgroundColor = useSelector((state) => state.settings.backgroundColor);
-  const buttonColor = useSelector((state) => state.settings.buttonColor);
 
   useEffect(() => {
     if (user) {
@@ -15,34 +13,10 @@ const Settings = () => {
     }
   }, [user, dispatch]);
 
-  const handleBackgroundColorChange = (e) => {
-    const newColor = e.target.value;
-    dispatch(setBackgroundColor(newColor));
-    if (user) {
-      // Dispatch persistSettingsToFirestore thunk to update Firestore
-      dispatch(persistSettingsToFirestore({ userId: user.uid, settings: { backgroundColor: newColor } }));
-    }
-  };
-
-  const handleButtonColorChange = (e) => {
-    const newColor = e.target.value;
-    dispatch(setButtonColor(newColor));
-    if (user) {
-      // Dispatch persistSettingsToFirestore thunk to update Firestore
-      dispatch(persistSettingsToFirestore({ userId: user.uid, settings: { buttonColor: newColor } }));
-    }
-  };
-
   return (
     <div className="settings-panel">
-      <div>
-        <label>Background Color:</label>
-        <input type="color" value={backgroundColor} onChange={handleBackgroundColorChange} />
-      </div>
-      <div>
-        <label>Button Color:</label>
-        <input type="color" value={buttonColor} onChange={handleButtonColorChange} />
-      </div>
+      <h1 className="text-xl font-bold">Settings</h1>
+      {/* Include other settings-related controls here as needed */}
     </div>
   );
 };

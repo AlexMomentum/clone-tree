@@ -13,6 +13,16 @@ body {
   
 }
 
+/* app.css */
+
+.navbar {
+  background: linear-gradient(to right, #0072ff, #00c6ff);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+  transform: perspective(500px) rotateX(3deg);
+  border-bottom: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+
 #root, .App {
   min-height: 100vh;
   display: flex;
