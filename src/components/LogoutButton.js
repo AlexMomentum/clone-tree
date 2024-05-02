@@ -12,8 +12,13 @@ const LogoutButton = () => {
 
   // Define style based on the buttonColor from Redux
   const style = {
-    backgroundColor: buttonColor, // Ensure this matches your state's actual property
-    color: 'white' // Set text color to white for visibility
+    backgroundColor: buttonColor,
+    color: 'white',
+    padding: '8px 16px', // Example padding
+    borderRadius: '5px', // Example border-radius
+    cursor: 'pointer', // Hand cursor on hover
+    border: 'none', // No border
+    fontSize: '16px', // Example font size
   };
 
   const handleLogout = () => {

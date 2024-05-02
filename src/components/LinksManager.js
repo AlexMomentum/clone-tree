@@ -6,6 +6,7 @@ const LinksManager = ({ userId }) => {
   const [links, setLinks] = useState([]);
   const [newLink, setNewLink] = useState('');
   const [editLink, setEditLink] = useState({});
+  const [addingLink, setAddingLink] = useState(false);
   const buttonColor = useSelector(state => state.settings.buttonColor);
 
   useEffect(() => {
@@ -16,55 +17,73 @@ const LinksManager = ({ userId }) => {
     loadLinks();
   }, [userId]);
 
-  const handleAddLink = async () => {
-    if (newLink) {
+  const handleAddOrUpdateLink = async () => {
+    if (editLink.id) {
+      // Update existing link
+      await updateLink(editLink.id, { url: newLink });
+      const updatedLinks = links.map(link => 
+        link.id === editLink.id ? { ...link, url: newLink } : link
+      );
+      setLinks(updatedLinks);
+    } else {
+      // Add new link
       const linkId = await addLink(userId, { url: newLink });
       setLinks([...links, { id: linkId, url: newLink }]);
+    }
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setAddingLink(false);
+    setEditLink({});
+    setNewLink('');
+  };
+
+  const openForm = (link) => {
+    if (link) {
+      setEditLink(link);
+      setNewLink(link.url);
+    } else {
+      setEditLink({});
       setNewLink('');
     }
+    setAddingLink(true);
   };
 
-  const handleDeleteLink = async (linkId) => {
-    await deleteLink(userId, linkId);
-    setLinks(links.filter(link => link.id !== linkId));
-  };
-
-  const handleUpdateLink = async (linkId) => {
-    if (editLink.url && editLink.id) {
-      await updateLink(userId, editLink.id, { url: editLink.url });
-      const updatedLinks = links.map(link => link.id === editLink.id ? { ...link, url: editLink.url } : link);
-      setLinks(updatedLinks);
-      setEditLink({});
+  const toggleAddLink = () => {
+    if (addingLink) {
+      resetForm();
+    } else {
+      openForm();
     }
   };
 
   return (
     <div>
-      <input
-        value={newLink}
-        onChange={(e) => setNewLink(e.target.value)}
-        placeholder="Add new link"
-      />
-      <button style={{ backgroundColor: buttonColor, color: 'white' }} onClick={handleAddLink}>
-        Add Link
+      <button onClick={toggleAddLink} style={{ backgroundColor: buttonColor, color: 'white' }}>
+        {addingLink ? 'Cancel' : '+ Add Link'}
       </button>
-      <ul>
+      {addingLink && (
+        <div>
+          <input
+            type="text"
+            value={newLink}
+            onChange={(e) => setNewLink(e.target.value)}
+            placeholder="Enter URL"
+          />
+          <button style={{ backgroundColor: buttonColor, color: 'white' }} onClick={handleAddOrUpdateLink}>
+            {editLink.id ? 'Save Changes' : 'Add Link'}
+          </button>
+        </div>
+      )}
+      <ul style={{ padding: 0 }}>
         {links.map(link => (
-          <li key={link.id}>
-            {editLink.id === link.id ? (
-              <input
-                value={editLink.url}
-                onChange={(e) => setEditLink({ ...editLink, url: e.target.value })}
-              />
-            ) : (
-              <span>{link.url}</span>
-            )}
-            <button style={{ backgroundColor: buttonColor, color: 'white' }} onClick={() => handleUpdateLink(link.id)}>
-              Save
-            </button>
-            <button style={{ backgroundColor: buttonColor, color: 'white' }} onClick={() => handleDeleteLink(link.id)}>
-              Delete
-            </button>
+          <li key={link.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+            <span>{link.url}</span>
+            <div>
+              <button onClick={() => openForm(link)}>Edit</button>
+              <button onClick={() => deleteLink(link.id)}>Delete</button>
+            </div>
           </li>
         ))}
       </ul>
