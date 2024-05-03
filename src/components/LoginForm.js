@@ -2,15 +2,16 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase/firebase-config';
-import { useNavigate } from 'react-router-dom';  // Import useNavigate
+import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setUser } from '../features/userSlice'; // Ensure this is correctly imported
+import { fetchUserSettings } from '../features/settingsSlice'; // Import fetchUserSettings
 
 const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const navigate = useNavigate();  // Hook for navigation
-  const dispatch = useDispatch();  // Redux dispatch
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -21,9 +22,12 @@ const LoginForm = () => {
       dispatch(setUser({
         email: userCredential.user.email,
         uid: userCredential.user.uid
-        // Add other user details you might need in your state
       }));
-      navigate('/links');  // Navigate to '/links' on successful login
+
+      // Fetch user settings right after setting the user
+      dispatch(fetchUserSettings(userCredential.user.uid));
+
+      navigate('/links'); // Navigate to '/links' on successful login
     } catch (error) {
       console.error('Login failed:', error.message);
     }

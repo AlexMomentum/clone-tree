@@ -8,7 +8,7 @@ import LinksManager from './components/LinksManager';
 import Settings from './components/Settings';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchUserSettings, setBackgroundColor, setButtonColor } from './features/settingsSlice';
-import Appearance from './components/Appearance'
+import Appearance from './components/Appearance';
 
 const App = () => {
   const { user, settings } = useSelector(state => ({
@@ -21,7 +21,7 @@ const App = () => {
   // Fetch user settings
   useEffect(() => {
     if (user) {
-      dispatch(fetchUserSettings(user.uid));
+      dispatch(fetchUserSettings(user.uid));  // Ensure this uses user.uid if that's your identifier
     }
   }, [user, dispatch]);
 
@@ -41,7 +41,7 @@ const App = () => {
   };
 
   const handleToggleSettings = () => {
-    navigate('/settings'); // Navigate to the settings route
+    navigate('/settings');
   };
 
   return (
@@ -52,7 +52,7 @@ const App = () => {
         <Route path="/login" element={<LoginForm />} />
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/register" element={<RegisterForm />} />
-        <Route path="/links" element={user ? <LinksManager userId={user.id} /> : <Navigate replace to="/login" />} />
+        <Route path="/links" element={user ? <LinksManager userId={user.uid} /> : <Navigate replace to="/login" />} />
         <Route path="/settings" element={<Settings onUpdateStyles={updateStyles} />} />
         <Route path="/appearance" element={<Appearance />} />
       </Routes>

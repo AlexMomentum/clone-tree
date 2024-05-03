@@ -9,6 +9,7 @@ export const userSlice = createSlice({
   },
   reducers: {
     setUser: (state, action) => {
+      console.log('setting user data:', action.payload);
       // Store only serializable data
       state.data = {
         uid: action.payload.uid,

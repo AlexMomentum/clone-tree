@@ -1,17 +1,27 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { setBackgroundColor, setButtonColor } from '../features/settingsSlice';
+import { fetchUserSettings, updateSettings } from '../features/settingsSlice';
 
 const Appearance = () => {
   const dispatch = useDispatch();
-  const { backgroundColor, buttonColor } = useSelector(state => state.settings);
+  const { user, backgroundColor, buttonColor } = useSelector(state => ({
+    user: state.user.data,
+    backgroundColor: state.settings.backgroundColor,
+    buttonColor: state.settings.buttonColor
+  }));
+
+  useEffect(() => {
+    if (user) {
+      dispatch(fetchUserSettings(user.uid));
+    }
+  }, [user, dispatch]);
 
   const handleBackgroundColorChange = (event) => {
-    dispatch(setBackgroundColor(event.target.value));
+    dispatch(updateSettings({ userId: user.uid, newSettings: { backgroundColor: event.target.value } }));
   };
 
   const handleButtonColorChange = (event) => {
-    dispatch(setButtonColor(event.target.value));
+    dispatch(updateSettings({ userId: user.uid, newSettings: { buttonColor: event.target.value } }));
   };
 
   return (

@@ -13,16 +13,24 @@ const addLink = async (userId, linkData) => {
 };
 
 const fetchLinks = async (userId) => {
-    try {
-      const q = query(collection(db, `users/${userId}/links`));
-      const querySnapshot = await getDocs(q);
-      const links = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      return links;  // Return an array of links
-    } catch (e) {
-      console.error("Error fetching documents: ", e);
-      throw new Error(e);
-    }
-  };
+  try {
+    const q = query(collection(db, `users/${userId}/links`));
+    const querySnapshot = await getDocs(q);
+    const links = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      url: doc.data().url,
+      backgroundColor: doc.data().backgroundColor || 'white', // Default to white if not specified
+      order: doc.data().order || 0 // Default to 0 if not specified
+    }));
+    // Optionally, sort by order if you're using ordering
+    links.sort((a, b) => a.order - b.order);
+    return links;
+  } catch (e) {
+    console.error("Error fetching documents: ", e);
+    throw new Error(e);
+  }
+};
+
 
   const updateLink = async (userId, linkId, newLinkData) => {
     try {

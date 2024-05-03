@@ -12,10 +12,38 @@ body {
   min-height: 100vh; /* Ensure body takes at least the full viewport height */
   
 }
+.link-card {
+  background-color: #fff; /* White background */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Subtle shadow */
+  padding: 20px; /* Padding inside the card */
+  margin: 10px 0; /* Space between cards */
+  display: flex;
+  align-items: center; /* Align items in a row */
+  justify-content: space-between; /* Space content evenly */
+  cursor: pointer; /* Pointer cursor on hover */
+  user-select: none;
+}
+
+.link-card:hover {
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15); /* More pronounced shadow on hover */
+}
+
+.link-card.active {
+  border: 2px solid #6200ea; /* Highlight effect for active card */
+  user-select: text;
+}
+
 
 /* app.css */
 
+.drag-handle:hover {
+  opacity: 0.8; /* Slight visual feedback on hover */
+}
 
+.drag-handle:active {
+  cursor: grabbing; /* Change cursor on active drag */
+}
 
 #root, .App {
   min-height: 100vh;
