@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './ModalStyles.css'; // Adjust the path as necessary
+import '../ModalStyles.css'; // Adjust the path as necessary
 
 const LinkForm = ({ isOpen, closeForm, linkDetails, saveLink }) => {
   const [link, setLink] = useState({ id: null, url: '' });

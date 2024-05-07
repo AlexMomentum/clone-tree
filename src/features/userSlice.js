@@ -1,4 +1,99 @@
-import { createSlice } from '@reduxjs/toolkit';
+// features/userSlice.js
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { auth } from '../firebase/firebase-config';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../firebase/firebase-config';
+
+// Check for unique username and update
+export const setUsername = createAsyncThunk(
+  'user/setUsername',
+  async ({ userId, username }, { rejectWithValue }) => {
+    try {
+      const usersCollection = collection(db, 'users');
+      const userQuery = query(usersCollection, where('username', '==', username));
+      const userSnapshot = await getDocs(userQuery);
+
+      if (!userSnapshot.empty) {
+        return rejectWithValue('Username is already taken');
+      }
+
+      const userRef = doc(db, 'users', userId);
+      await setDoc(userRef, { username }, { merge: true });
+      return { username };
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Register new user
+export const register = createAsyncThunk(
+  'user/register',
+  async ({ email, password, username }, { rejectWithValue }) => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Save user data to Firestore
+      const userRef = doc(db, 'users', user.uid);
+      await setDoc(userRef, { email, username });
+
+      return { user, email, username };
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Login existing user
+export const login = createAsyncThunk(
+  'user/login',
+  async ({ email, password }, { rejectWithValue }) => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Retrieve additional user data from Firestore
+      const userRef = doc(db, 'users', user.uid);
+      const docSnap = await getDoc(userRef);
+
+      if (docSnap.exists()) {
+        return { ...docSnap.data(), uid: user.uid };
+      } else {
+        return { email, uid: user.uid };
+      }
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Logout user
+export const logoutAsync = createAsyncThunk(
+  'user/logout',
+  async (_, { rejectWithValue }) => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Update Settings
+export const updateSettings = createAsyncThunk(
+  'user/updateSettings',
+  async ({ userId, newSettings }, { rejectWithValue }) => {
+    try {
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, newSettings);
+      return newSettings;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
 
 export const userSlice = createSlice({
   name: 'user',
@@ -6,15 +101,14 @@ export const userSlice = createSlice({
     data: null,
     isLoading: false,
     error: null,
+    settings: {},
   },
   reducers: {
     setUser: (state, action) => {
-      console.log('setting user data:', action.payload);
-      // Store only serializable data
       state.data = {
         uid: action.payload.uid,
         email: action.payload.email,
-        // Any other user fields that are serializable
+        username: action.payload.username || '',  // Ensure username is included
       };
       state.isLoading = false;
       state.error = null;
@@ -39,18 +133,55 @@ export const userSlice = createSlice({
     logout: (state) => {
       state.data = null;
     },
-    // Add new reducer for updating settings
     updateSettings: (state, action) => {
-      // This will merge existing settings with any updates provided
-      state.settings = {...state.settings, ...action.payload};
+      state.settings = { ...state.settings, ...action.payload };
     },
+    userSetUsername: (state, action) => {
+      state.data.username = action.payload;
+    }
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(register.fulfilled, (state, action) => {
+        state.data = {
+          uid: action.payload.uid,
+          email: action.payload.email,
+          username: action.payload.username,
+        };
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(register.rejected, (state, action) => {
+        state.error = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(login.fulfilled, (state, action) => {
+        state.data = action.payload;
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(login.rejected, (state, action) => {
+        state.error = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(logoutAsync.fulfilled, (state) => {
+        state.data = null;
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(logoutAsync.rejected, (state, action) => {
+        state.error = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(setUsername.fulfilled, (state, action) => {
+        state.data.username = action.payload.username;
+        state.settings.username = action.payload.username;
+      })
+      .addCase(setUsername.rejected, (state, action) => {
+        state.error = action.payload;
+      });
   },
 });
 
-// Export all actions, including the new updateSettings
-export const { 
-  setUser, getUserStart, getUserSuccess, getUserFailure, 
-  clearUser, logout
-} = userSlice.actions;
-
+export const { setUser, logout } = userSlice.actions;
 export default userSlice.reducer;

@@ -1,27 +1,41 @@
-import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchUserSettings, updateSettings } from '../features/settingsSlice';
+// src/components/Appearance.js
+import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import {
+  settingsSetBackgroundColor,
+  settingsSetButtonColor,
+  settingsSetUsername,
+  updateUserSettings,
+} from '../features/settingsSlice';
 
 const Appearance = () => {
   const dispatch = useDispatch();
-  const { user, backgroundColor, buttonColor } = useSelector(state => ({
+  const { user, backgroundColor, buttonColor, username, error } = useSelector((state) => ({
     user: state.user.data,
     backgroundColor: state.settings.backgroundColor,
-    buttonColor: state.settings.buttonColor
+    buttonColor: state.settings.buttonColor,
+    username: state.settings.username,
+    error: state.user.error,
   }));
+  const [localBackgroundColor, setLocalBackgroundColor] = useState(backgroundColor);
+  const [localButtonColor, setLocalButtonColor] = useState(buttonColor);
+  const [localUsername, setLocalUsername] = useState(username);
 
-  useEffect(() => {
-    if (user) {
-      dispatch(fetchUserSettings(user.uid));
-    }
-  }, [user, dispatch]);
+  const handleSaveChanges = () => {
+    // Update settings in the Redux store
+    dispatch(settingsSetBackgroundColor(localBackgroundColor));
+    dispatch(settingsSetButtonColor(localButtonColor));
+    dispatch(settingsSetUsername(localUsername));
 
-  const handleBackgroundColorChange = (event) => {
-    dispatch(updateSettings({ userId: user.uid, newSettings: { backgroundColor: event.target.value } }));
-  };
-
-  const handleButtonColorChange = (event) => {
-    dispatch(updateSettings({ userId: user.uid, newSettings: { buttonColor: event.target.value } }));
+    // Update user settings in Firestore
+    dispatch(updateUserSettings({
+      userId: user.uid,
+      newSettings: {
+        backgroundColor: localBackgroundColor,
+        buttonColor: localButtonColor,
+        username: localUsername,
+      },
+    }));
   };
 
   return (
@@ -30,15 +44,38 @@ const Appearance = () => {
       <div className="color-picker">
         <label>
           Background Color:
-          <input type="color" value={backgroundColor} onChange={handleBackgroundColorChange} />
+          <input
+            type="color"
+            value={localBackgroundColor}
+            onChange={(e) => setLocalBackgroundColor(e.target.value)}
+          />
         </label>
       </div>
       <div className="color-picker mt-4">
         <label>
           Button Color:
-          <input type="color" value={buttonColor} onChange={handleButtonColorChange} />
+          <input
+            type="color"
+            value={localButtonColor}
+            onChange={(e) => setLocalButtonColor(e.target.value)}
+          />
         </label>
       </div>
+      <div className="username-edit mt-4">
+        <label>
+          Username:
+          <input
+            type="text"
+            value={localUsername}
+            onChange={(e) => setLocalUsername(e.target.value)}
+            placeholder="Enter your username"
+          />
+        </label>
+        {error && <p className="text-red-500">{error}</p>}
+      </div>
+      <button onClick={handleSaveChanges} style={{ marginTop: '20px' }}>
+        Save Changes
+      </button>
     </div>
   );
 };

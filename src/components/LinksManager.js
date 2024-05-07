@@ -1,23 +1,24 @@
+// LinksManager.js
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { db } from '../firebase/firebase-config';
 import { writeBatch, doc } from 'firebase/firestore';
-import { fetchLinks, updateLink, deleteLink } from './links/links';
+import { db } from '../firebase/firebase-config';
+import { fetchLinks, addLink, updateLink } from './links/links';
 import { FaGripVertical } from 'react-icons/fa';
-import LinkForm from './LinkForm'; // Adjust the path as necessary
+import LinkForm from './LinkForm';
 
 function getStyle(style, snapshot) {
   if (!snapshot.isDragging) return style;
   if (!snapshot.isDropAnimating) {
     return {
       ...style,
-      boxShadow: "0px 0px 10px rgba(0,0,0,0.2)"
+      boxShadow: '0px 0px 10px rgba(0,0,0,0.2)',
     };
   }
   return {
     ...style,
-    transition: `all 0.2s ease`
+    transition: `all 0.2s ease`,
   };
 }
 
@@ -26,7 +27,7 @@ const LinksManager = ({ userId }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
   const [currentLink, setCurrentLink] = useState(null);
-  const buttonColor = useSelector(state => state.settings.buttonColor);
+  const buttonColor = useSelector((state) => state.settings.buttonColor);
 
   useEffect(() => {
     const loadLinks = async () => {
@@ -36,28 +37,31 @@ const LinksManager = ({ userId }) => {
         setLinks(loadedLinks);
         setIsLoading(false);
       } catch (error) {
-        console.error("Failed to load links:", error);
+        console.error('Failed to load links:', error);
         setIsLoading(false);
       }
     };
     loadLinks();
   }, [userId]);
 
-  const onDragEnd = useCallback((result) => {
-    const { destination, source } = result;
-    if (!destination || (source.droppableId === destination.droppableId && source.index === destination.index)) {
+  const onDragEnd = useCallback(
+    (result) => {
+      const { destination, source } = result;
+      if (!destination || (source.droppableId === destination.droppableId && source.index === destination.index)) {
         return;
-    }
-    const reorderedLinks = Array.from(links);
-    const [removed] = reorderedLinks.splice(source.index, 1);
-    reorderedLinks.splice(destination.index, 0, removed);
+      }
+      const reorderedLinks = Array.from(links);
+      const [removed] = reorderedLinks.splice(source.index, 1);
+      reorderedLinks.splice(destination.index, 0, removed);
 
-    setLinks(reorderedLinks);
-    updateFirebaseLinkOrder(reorderedLinks).catch(error => {
-        console.error("Failed to update link order in Firebase:", error);
-        setLinks(links);
-    });
-  }, [links, userId]);
+      setLinks(reorderedLinks);
+      updateFirebaseLinkOrder(reorderedLinks).catch((error) => {
+        console.error('Failed to update link order in Firebase:', error);
+        setLinks(links); // Optionally revert the UI change if Firebase update fails
+      });
+    },
+    [links, userId]
+  );
 
   const updateFirebaseLinkOrder = async (links) => {
     const batch = writeBatch(db);
@@ -68,8 +72,8 @@ const LinksManager = ({ userId }) => {
     try {
       await batch.commit();
     } catch (error) {
-      console.error("Error updating Firebase link order:", error);
-      throw error;
+      console.error('Error updating Firebase link order:', error);
+      throw error; // Re-throw to handle it in the calling context
     }
   };
 
@@ -79,7 +83,7 @@ const LinksManager = ({ userId }) => {
   };
 
   const handleDelete = (id) => {
-    const updatedLinks = links.filter(link => link.id !== id);
+    const updatedLinks = links.filter((link) => link.id !== id);
     setLinks(updatedLinks);
   };
 
@@ -88,11 +92,12 @@ const LinksManager = ({ userId }) => {
     setFormOpen(true);
   };
 
-  const saveLink = (link) => {
+  const saveLink = async (link) => {
     if (link.id) {
-      setLinks(links.map(l => l.id === link.id ? { ...l, url: link.url } : l));
+      await updateLink(userId, link.id, { url: link.url });
+      setLinks(links.map((l) => (l.id === link.id ? { ...l, url: link.url } : l)));
     } else {
-      const newLink = { ...link, id: Date.now().toString() }; // Mock ID generation
+      const newLink = { id: await addLink(userId, { url: link.url, order: links.length }), url: link.url };
       setLinks([...links, newLink]);
     }
     setFormOpen(false);
@@ -105,24 +110,24 @@ const LinksManager = ({ userId }) => {
 
   return (
     <div>
-      <button onClick={handleAddLink} style={{
-        padding: '10px',
-        marginTop: '10px',
-        backgroundColor: '#6200ee',
-        color: 'white',
-        border: 'none',
-        borderRadius: '5px',
-        cursor: 'pointer',
-        width: '100%'
-      }}>
+      <button
+        onClick={handleAddLink}
+        style={{
+          padding: '10px',
+          marginTop: '10px',
+          backgroundColor: '#6200ee',
+          color: 'white',
+          border: 'none',
+          borderRadius: '5px',
+          cursor: 'pointer',
+          width: '100%',
+        }}
+      >
         + Add Link
       </button>
-      {formOpen && <LinkForm
-        isOpen={formOpen}
-        closeForm={closeForm}
-        linkDetails={currentLink}
-        saveLink={saveLink}
-      />}
+      {formOpen && (
+        <LinkForm isOpen={formOpen} closeForm={closeForm} linkDetails={currentLink} saveLink={saveLink} />
+      )}
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="droppable">
           {(provided) => (
@@ -140,17 +145,17 @@ const LinksManager = ({ userId }) => {
                         padding: '10px',
                         margin: '10px 0',
                         backgroundColor: snapshot.isDragging ? '#f4f4f4' : '#fff',
-                        boxShadow: snapshot.isDragging ? "0px 0px 10px rgba(0,0,0,0.2)" : "none",
+                        boxShadow: snapshot.isDragging ? '0px 0px 10px rgba(0,0,0,0.2)' : 'none',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         borderRadius: '5px',
                       }}
                     >
-                      <span style={{ flexGrow: 1 }}>
-                        {link.url}
-                      </span>
-                      <button onClick={() => handleEdit(link)} style={{ marginRight: '5px' }}>Edit</button>
+                      <span style={{ flexGrow: 1 }}>{link.url}</span>
+                      <button onClick={() => handleEdit(link)} style={{ marginRight: '5px' }}>
+                        Edit
+                      </button>
                       <button onClick={() => handleDelete(link.id)}>Delete</button>
                     </div>
                   )}

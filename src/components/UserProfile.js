@@ -1,21 +1,37 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchUserSettings } from '../features/settingsSlice';
+import { fetchUserSettings, updateUserSettings } from '../features/settingsSlice';
 
 const UserProfile = () => {
+  const { user, settings } = useSelector(state => ({
+    user: state.user.data,
+    settings: state.settings
+  }));
   const dispatch = useDispatch();
-  const user = useSelector((state) => state.user.data);
+  const [username, setUsername] = useState(user?.username || '');
 
-  // Effect to load user-specific settings when the user data is available
   useEffect(() => {
-    if (user && user.uid) {
+    if (user) {
       dispatch(fetchUserSettings(user.uid));
     }
   }, [user, dispatch]);
 
+  const handleSave = () => {
+    if (user) {
+      dispatch(updateUserSettings({ userId: user.uid, newSettings: { username } }));
+    }
+  };
+
   return (
     <div>
-      {user ? <h1>Welcome, {user.name}</h1> : <p>No user data available.</p>}
+      <h1>User Profile</h1>
+      <input
+        type="text"
+        placeholder="Username"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+      />
+      <button onClick={handleSave}>Save</button>
     </div>
   );
 };

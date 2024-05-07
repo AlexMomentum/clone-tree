@@ -35,6 +35,23 @@ body {
 }
 
 
+.share-button,
+.logout-button {
+  background-color: #6200ee;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.share-button:hover,
+.logout-button:hover {
+  background-color: #5a00d1;
+}
+
+
+
 /* app.css */
 
 .drag-handle:hover {

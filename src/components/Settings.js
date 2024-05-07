@@ -1,43 +1,95 @@
-import React, { useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { fetchUserSettings, updateSettings } from '../features/settingsSlice';
+// src/features/settingsSlice.js
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { db } from '../firebase/firebase-config';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
-const Settings = () => {
-  const { user, loading, error } = useSelector(state => ({
-    user: state.user.data,
-    loading: state.settings.loading,
-    error: state.settings.error
-  }));
-  const dispatch = useDispatch();
-
-  //const [localBackgroundColor, setLocalBackgroundColor] = useState(backgroundColor);
-  //const [localButtonColor, setLocalButtonColor] = useState(buttonColor);
-
-  useEffect(() => {
-    if (user) {
-      dispatch(fetchUserSettings(user.uid));
+// Fetch user settings
+export const fetchUserSettings = createAsyncThunk(
+  'settings/fetchUserSettings',
+  async (userId, { rejectWithValue }) => {
+    try {
+      const userRef = doc(db, 'users', userId);
+      const docSnap = await getDoc(userRef);
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        const { settings = {} } = userData;
+        return {
+          ...settings, // Ensure settings includes username
+          backgroundColor: settings.backgroundColor || '#ffffff',
+          buttonColor: settings.buttonColor || '#0000ff',
+        };
+      } else {
+        return rejectWithValue('User not found');
+      }
+    } catch (error) {
+      return rejectWithValue(error.toString());
     }
-  }, [user, dispatch]);
+  }
+);
 
+// Update user settings
+export const updateUserSettings = createAsyncThunk(
+  'settings/updateUserSettings',
+  async ({ userId, newSettings }, { rejectWithValue }) => {
+    try {
+      const userRef = doc(db, 'users', userId);
+      await setDoc(userRef, { settings: newSettings }, { merge: true });
+      return newSettings;
+    } catch (error) {
+      return rejectWithValue(error.toString());
+    }
+  }
+);
 
-  // const handleSaveChanges = () => {
-  //   dispatch(updateSettings({
-  //     userId: user.uid,
-  //     newSettings: {
-  //       backgroundColor: localBackgroundColor,
-  //       buttonColor: localButtonColor
-  //     }
-  //   }));
-  // };
+const settingsSlice = createSlice({
+  name: 'settings',
+  initialState: {
+    username: '',
+    backgroundColor: '#ffffff',
+    buttonColor: '#0000ff',
+    loading: false,
+    error: null,
+  },
+  reducers: {
+    settingsSetUsername: (state, action) => {
+      state.username = action.payload;
+    },
+    settingsSetBackgroundColor: (state, action) => {
+      state.backgroundColor = action.payload;
+    },
+    settingsSetButtonColor: (state, action) => {
+      state.buttonColor = action.payload;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchUserSettings.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchUserSettings.fulfilled, (state, action) => {
+        const { username, backgroundColor, buttonColor } = action.payload;
+        state.username = username;
+        state.backgroundColor = backgroundColor;
+        state.buttonColor = buttonColor;
+        state.loading = false;
+      })
+      .addCase(fetchUserSettings.rejected, (state, action) => {
+        state.error = action.payload || 'Failed to fetch settings';
+        state.loading = false;
+      })
+      .addCase(updateUserSettings.fulfilled, (state, action) => {
+        const { username, backgroundColor, buttonColor } = action.payload;
+        state.username = username;
+        state.backgroundColor = backgroundColor;
+        state.buttonColor = buttonColor;
+      });
+  },
+});
 
-  return (
-    <div className="settings-panel">
-      <h1 className="text-xl font-bold">Settings</h1>
-      {error && <p className="text-red-500">{error}</p>}
-      {/* Additional settings fields can go here */}
-    </div>
-  );
-};
-
-
-export default Settings;
+export const {
+  settingsSetUsername,
+  settingsSetBackgroundColor,
+  settingsSetButtonColor,
+} = settingsSlice.actions;
+export default settingsSlice.reducer;
