@@ -2,7 +2,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { auth } from '../firebase/firebase-config';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { db } from '../firebase/firebase-config';
 
 // Check for unique username and update
@@ -37,14 +37,11 @@ export const register = createAsyncThunk(
 
       // Save user data to Firestore
       const userRef = doc(db, 'users', user.uid);
-      await setDoc(userRef, {
-        email,
-        settings: {
-          username,
-          backgroundColor: '#ffffff',
-          buttonColor: '#0000ff'
-        }
-      });
+      await setDoc(userRef, { email, username });
+
+      // Create an empty links subcollection
+      const linksCollection = collection(db, `users/${user.uid}/links`);
+      await addDoc(linksCollection, { url: '', backgroundColor: '', order: 0 });
 
       return { user, email, username };
     } catch (error) {
@@ -52,6 +49,8 @@ export const register = createAsyncThunk(
     }
   }
 );
+
+
 
 // Login existing user
 // src/features/userSlice.js
