@@ -1,4 +1,4 @@
-// features/userSlice.js
+// src/features/userSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { auth } from '../firebase/firebase-config';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
@@ -37,7 +37,14 @@ export const register = createAsyncThunk(
 
       // Save user data to Firestore
       const userRef = doc(db, 'users', user.uid);
-      await setDoc(userRef, { email, username });
+      await setDoc(userRef, {
+        email,
+        settings: {
+          username,
+          backgroundColor: '#ffffff',
+          buttonColor: '#0000ff'
+        }
+      });
 
       return { user, email, username };
     } catch (error) {
@@ -45,6 +52,9 @@ export const register = createAsyncThunk(
     }
   }
 );
+
+// Login existing user
+// src/features/userSlice.js
 
 // Login existing user
 export const login = createAsyncThunk(
@@ -59,15 +69,19 @@ export const login = createAsyncThunk(
       const docSnap = await getDoc(userRef);
 
       if (docSnap.exists()) {
+        console.log("Fetched user data:", docSnap.data()); // Debug log
         return { ...docSnap.data(), uid: user.uid };
       } else {
-        return { email, uid: user.uid };
+        console.log("User data not found, using default values."); // Debug log
+        return { email, uid: user.uid, username: '' }; // Provide a default username if none exists
       }
     } catch (error) {
+      console.error("Error during login:", error.message); // Debug log
       return rejectWithValue(error.message);
     }
   }
 );
+
 
 // Logout user
 export const logoutAsync = createAsyncThunk(
@@ -95,35 +109,25 @@ export const updateSettings = createAsyncThunk(
   }
 );
 
-export const userSlice = createSlice({
+const initialState = {
+  data: null, // Initial state for user data
+  isLoading: false,
+  error: null,
+  settings: {},
+};
+
+const userSlice = createSlice({
   name: 'user',
-  initialState: {
-    data: null,
-    isLoading: false,
-    error: null,
-    settings: {},
-  },
+  initialState,
   reducers: {
     setUser: (state, action) => {
       state.data = {
         uid: action.payload.uid,
         email: action.payload.email,
-        username: action.payload.username || '',  // Ensure username is included
+        username: action.payload.username || '', // Ensure username is included
       };
       state.isLoading = false;
       state.error = null;
-    },
-    getUserStart: (state) => {
-      state.isLoading = true;
-      state.error = null;
-    },
-    getUserSuccess: (state, action) => {
-      state.data = action.payload;
-      state.isLoading = false;
-    },
-    getUserFailure: (state, action) => {
-      state.error = action.payload;
-      state.isLoading = false;
     },
     clearUser: (state) => {
       state.data = null;
@@ -137,8 +141,10 @@ export const userSlice = createSlice({
       state.settings = { ...state.settings, ...action.payload };
     },
     userSetUsername: (state, action) => {
-      state.data.username = action.payload;
-    }
+      if (state.data) {
+        state.data.username = action.payload;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -174,8 +180,9 @@ export const userSlice = createSlice({
         state.isLoading = false;
       })
       .addCase(setUsername.fulfilled, (state, action) => {
-        state.data.username = action.payload.username;
-        state.settings.username = action.payload.username;
+        if (state.data) {
+          state.data.username = action.payload.username;
+        }
       })
       .addCase(setUsername.rejected, (state, action) => {
         state.error = action.payload;

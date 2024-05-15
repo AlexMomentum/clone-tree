@@ -1,4 +1,3 @@
-// src/features/settingsSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { db } from '../firebase/firebase-config';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -14,8 +13,7 @@ export const fetchUserSettings = createAsyncThunk(
         const userData = docSnap.data();
         const { settings = {} } = userData;
         return {
-          ...settings,
-          username: userData.username,
+          username: settings.username || '',
           backgroundColor: settings.backgroundColor || '#ffffff',
           buttonColor: settings.buttonColor || '#0000ff',
         };
@@ -80,7 +78,8 @@ const settingsSlice = createSlice({
         state.loading = false;
       })
       .addCase(updateUserSettings.fulfilled, (state, action) => {
-        const { backgroundColor, buttonColor } = action.payload;
+        const { username, backgroundColor, buttonColor } = action.payload;
+        state.username = username;
         state.backgroundColor = backgroundColor;
         state.buttonColor = buttonColor;
       });
@@ -93,3 +92,4 @@ export const {
   settingsSetButtonColor,
 } = settingsSlice.actions;
 export default settingsSlice.reducer;
+

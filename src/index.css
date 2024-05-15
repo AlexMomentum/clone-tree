@@ -6,6 +6,7 @@
 
 :root {
   --dynamic-background-color: #ffffff; /* Default fallback color */
+  --dynamic-button-color: #0000ff; /* Default button color */
 }
 
 body {
@@ -15,10 +16,24 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--dynamic-background-color);
 }
 
 .App {
-  background-color: var(--dynamic-background-color); /* Corrected the variable name here */
+  background-color: var(--dynamic-background-color);
+}
+
+button {
+  background-color: var(--dynamic-button-color);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
 }
 
 code {

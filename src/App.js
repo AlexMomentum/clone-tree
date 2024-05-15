@@ -1,20 +1,17 @@
 // src/App.js
 import React, { useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import UserProfile from './components/UserProfile';
+import { useSelector, useDispatch } from 'react-redux';
+import { Route, Routes, Navigate, useNavigate } from 'react-router-dom';
+import { fetchUserSettings, settingsSetBackgroundColor, settingsSetButtonColor } from './features/settingsSlice';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
-import NavigationBar from './components/NavigationBar';
+import ResetPassword from './components/ResetPassword';
+import UserProfile from './components/UserProfile';
 import LinksManager from './components/LinksManager';
 import Settings from './components/Settings';
 import Appearance from './components/Appearance';
 import FanLinks from './components/FanLinks';
-import { useSelector, useDispatch } from 'react-redux';
-import {
-  fetchUserSettings,
-  settingsSetBackgroundColor,
-  settingsSetButtonColor,
-} from './features/settingsSlice';
+import NavigationBar from './components/NavigationBar';
 
 const App = () => {
   const { user, settings } = useSelector((state) => ({
@@ -50,20 +47,16 @@ const App = () => {
 
   return (
     <div className="App min-h-screen flex flex-col">
-      {user && (
-        <NavigationBar
-          username={settings.username}
-          onToggleSettings={handleToggleSettings}
-        />
-      )}
+      {user && <NavigationBar username={settings.username} onToggleSettings={handleToggleSettings} />}
       <Routes>
         <Route path="/" element={<Navigate replace to={user ? '/links' : '/login'} />} />
         <Route path="/login" element={<LoginForm />} />
-        <Route path="/profile" element={<UserProfile />} />
         <Route path="/register" element={<RegisterForm />} />
-        <Route path="/links" element={user ? <LinksManager userId={user.uid} /> : <Navigate replace to='/login' />} />
-        <Route path="/settings" element={<Settings onUpdateStyles={updateStyles} />} />
-        <Route path="/appearance" element={<Appearance />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/profile" element={user ? <UserProfile /> : <Navigate replace to="/login" />} />
+        <Route path="/links" element={user ? <LinksManager userId={user.uid} /> : <Navigate replace to="/login" />} />
+        <Route path="/settings" element={user ? <Settings /> : <Navigate replace to="/login" />} />
+        <Route path="/appearance" element={user ? <Appearance onUpdateStyles={updateStyles} /> : <Navigate replace to="/login" />} />
         <Route path="/fan/:username" element={<FanLinks />} />
       </Routes>
     </div>

@@ -1,4 +1,3 @@
-// components/links/links.js
 import { db } from '../../firebase/firebase-config';
 import { collection, addDoc, getDocs, query, where, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 
@@ -37,7 +36,7 @@ const fetchUserLinks = async (userId) => {
 const fetchLinksByUsername = async (username) => {
   try {
     const usersCollection = collection(db, 'users');
-    const userQuery = query(usersCollection, where('username', '==', username));
+    const userQuery = query(usersCollection, where('settings.username', '==', username));
     const userSnapshot = await getDocs(userQuery);
 
     if (userSnapshot.empty) {

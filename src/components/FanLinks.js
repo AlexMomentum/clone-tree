@@ -1,4 +1,3 @@
-// src/components/FanLinks.js
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchLinksByUsername } from './links/links';

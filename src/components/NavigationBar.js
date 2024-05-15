@@ -1,4 +1,3 @@
-// src/components/NavigationBar.js
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -28,17 +27,13 @@ const NavigationBar = ({ username, onToggleSettings }) => {
   };
 
   const handleShare = async () => {
-    console.log(`Sharing URL for username: ${username}`); // Debug log
-
     if (!username || typeof username !== 'string') {
       alert('Invalid username. Please set your username before sharing.');
       console.error('Invalid username:', username);
-      return; // Stop execution if username is invalid
+      return;
     }
 
     const url = `${window.location.origin}/fan/${username}`;
-    console.log(`Generated share URL: ${url}`); // Debug log
-
     if (navigator.share) {
       try {
         await navigator.share({
@@ -83,3 +78,4 @@ const NavigationBar = ({ username, onToggleSettings }) => {
 };
 
 export default NavigationBar;
+
